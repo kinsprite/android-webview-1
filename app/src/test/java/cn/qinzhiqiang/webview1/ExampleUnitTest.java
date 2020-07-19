@@ -3,6 +3,7 @@ package cn.qinzhiqiang.webview1;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -13,5 +14,15 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() {
         assertEquals(4, 2 + 2);
+    }
+
+    @Test
+    public void toJsString() {
+        assertEquals("null", Util.toJsString(null));
+        assertEquals("\"abc\"", Util.toJsString("abc"));
+        assertEquals("\"ab\\\\c\"", Util.toJsString("ab\\c"));
+        assertEquals("\"ab\\\"c\"", Util.toJsString("ab\"c"));
+        assertEquals("\"ab\\\\\\\"c\"", Util.toJsString("ab\\\"c"));
+        assertEquals("\"ab\\\"\\\\c\"", Util.toJsString("ab\"\\c"));
     }
 }

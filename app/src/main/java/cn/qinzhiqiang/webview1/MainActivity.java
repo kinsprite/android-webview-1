@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initWebView();
+        webView.loadUrl("https://micro.qinzhiqiang.cn");
     }
 
     private void initWebView() {
@@ -34,8 +35,6 @@ public class MainActivity extends AppCompatActivity {
         // 开启DOM storage API 功能
         settings.setDomStorageEnabled(true);
 
-        webView.loadUrl("https://micro.qinzhiqiang.cn");
-
         webView.setWebViewClient(new WebViewClient() {
             //在webview里打开新链接，否则会使用系统中浏览器打开新链接
             @Override
@@ -44,6 +43,15 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        webView.addJavascriptInterface(new JavaScriptInjectedNative(), "injectedNative");
+    }
+
+
+    private void sendMessageToWeb(String msgId, String payload) {
+        String jsContent = "if (this.nativeMessageHandler) { this.nativeMessageHandler("
+                + Util.toJsString(msgId) + "," + Util.toJsString(payload) + ")}";
+        webView.loadUrl("javascript:" + jsContent);
     }
 
     @Override
