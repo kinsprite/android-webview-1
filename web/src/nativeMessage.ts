@@ -50,7 +50,7 @@ function removeNativeMessageHandler(msgId: string, handler: MessageHandler): voi
 }
 
 function nativeMessageHandler(msgId: string, payload: string | null | undefined): void {
-  const handlers = [...messageHandlersMap[msgId], ...messageHandlersMap['']];
+  const handlers = [...(messageHandlersMap[msgId] || []), ...(messageHandlersMap[''] || [])];
 
   if (handlers.length === 0) {
     return;
@@ -69,6 +69,10 @@ function nativeMessageHandler(msgId: string, payload: string | null | undefined)
   let i = 0;
 
   const next = () => {
+    if (i >= handlers.length) {
+      return;
+    }
+
     const handler = handlers[i];
     i += 1;
 

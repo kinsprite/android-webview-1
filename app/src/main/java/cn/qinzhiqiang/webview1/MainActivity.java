@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Vibrator;
@@ -26,12 +27,15 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandler {
     public static final int TACK_PIC_REQ_CODE = 1101;
 
-    WebView webView;
+    private WebView webView;
     private long exitTime = 0;
+    private Timer tickTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +45,14 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
         initWebView();
         // webView.loadUrl("https://micro.qinzhiqiang.cn");
         webView.loadUrl("file:///android_asset/index.html");
+
+        startTick();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        closeTick();
     }
 
     private void initWebView() {
@@ -75,7 +87,20 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
     private void sendMessageToWeb(String msgId, String payload) {
         String jsContent = "if (this.nativeMessageHandler) { this.nativeMessageHandler("
                 + Util.toJsString(msgId) + "," + Util.toJsString(payload) + ")}";
-        webView.loadUrl("javascript:" + jsContent);
+        Log.i("MsgToWeb", "javascript:" + jsContent);
+
+        webView.post(new Runnable() {
+            @Override
+            public void run() {
+                if (Build.VERSION.SDK_INT >= 19 /*Might need 21*/) {
+                    webView.evaluateJavascript("javascript:" + jsContent, null);
+                }else {
+                    webView.loadUrl("javascript:" + jsContent);
+                }
+            }
+        });
+
+        // webView.loadUrl("javascript:" + jsContent);
     }
 
     @Override
@@ -108,6 +133,10 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
                 break;
             case "vibrator_notify":
                 vibratorNotify();
+                break;
+            case "event_round":
+                toastShow("Event round 1");
+                sendMessageToWeb("event_round_back", "");
                 break;
             default:
                 break;
@@ -188,7 +217,7 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
         }
 
         vibrator.cancel();
-        vibrator.vibrate(new long[]{100, 200, 100, 200}, 0);
+        vibrator.vibrate(new long[]{100, 200, 100, 200}, -1);
     }
 
     @Override
@@ -202,5 +231,21 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
                 Log.i("CAMERA", "Error");
             }
         }
+    }
+
+    private void startTick() {
+        tickTimer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                sendMessageToWeb("native_tick", "");
+            }
+        };
+
+        tickTimer.schedule(task,1000,1000);
+    }
+
+    private void closeTick() {
+        tickTimer.cancel();
     }
 }
