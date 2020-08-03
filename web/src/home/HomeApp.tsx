@@ -6,6 +6,10 @@ import {
 import styles from './HomeApp.module.css';
 import { sendMessageToNative } from '../nativeMessage';
 
+function toastShow() {
+  sendMessageToNative('toast_show', 'Text from home page');
+}
+
 function cameraOpen() {
   sendMessageToNative('camera_open');
 }
@@ -19,6 +23,7 @@ function HomeApp(): JSX.Element {
     <div className={styles.App}>
       <header className={styles.AppHeader}>
         <div className={styles.BtnGroup}>
+          <button type="button" onClick={toastShow}>Toast</button>
           <button type="button" onClick={cameraOpen}>Camera</button>
           <button type="button" onClick={vibratorNotify}>Vibrator</button>
         </div>

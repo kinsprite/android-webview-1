@@ -1,14 +1,35 @@
 package cn.qinzhiqiang.webview1;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Vibrator;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.Gravity;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+import java.io.File;
+import java.io.IOException;
+
+public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandler {
+    public static final int TACK_PIC_REQ_CODE = 1101;
+
     WebView webView;
     private long exitTime = 0;
 
@@ -45,7 +66,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.addJavascriptInterface(new JavaScriptInjectedNative(), "injectedNative");
+        JavaScriptInjectedNative injectedNative = new JavaScriptInjectedNative();
+        injectedNative.SetJsBridgeMsgHandler(this);
+        webView.addJavascriptInterface(injectedNative, "injectedNative");
     }
 
 
@@ -66,6 +89,117 @@ public class MainActivity extends AppCompatActivity {
                 exitTime = System.currentTimeMillis();
             } else {
                 finish();
+            }
+        }
+    }
+
+    @Override
+    public String onJsBridgeMsg(String msgId, String payload) {
+        if (msgId == null) {
+            return "Empty msg id";
+        }
+
+        switch (msgId) {
+            case "toast_show":
+                toastShow(payload);
+                break;
+            case "camera_open":
+                cameraOpen();
+                break;
+            case "vibrator_notify":
+                vibratorNotify();
+                break;
+            default:
+                break;
+        }
+
+        return "Message done by Main.";
+    }
+
+    private void toastShow(String text) {
+        Toast toast = Toast.makeText(this, text, Toast.LENGTH_LONG);
+        // toast.setGravity(Gravity.CENTER_VERTICAL|Gravity.CENTER_HORIZONTAL , 0, 0);
+        TextView v = (TextView) toast.getView().findViewById(android.R.id.message);
+        // v.setTextColor(Color.WHITE);
+        toast.show();
+    }
+    
+    private boolean checkPermissions(String[] permissions) {
+        for (String p : permissions) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void requestPermissions(String[] permissions) {
+        if (!checkPermissions(permissions)) {
+            ActivityCompat.requestPermissions(this, permissions, 1);
+        }
+    }
+
+    private void cameraOpen() {
+        String[] permissions = new String[]{
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//            Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS
+        };
+
+        requestPermissions(permissions);
+
+//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        startActivityForResult(intent, TACK_PIC_REQ_CODE);
+//        return;
+
+        File dir = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        if (dir.exists()){
+            dir.mkdirs();
+        }
+
+        File currentImageFile = new File(dir,System.currentTimeMillis() + ".jpg");
+
+        if (!currentImageFile.exists()){
+            try {
+                currentImageFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Intent it = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(it, TACK_PIC_REQ_CODE);
+    }
+
+    private void vibratorNotify() {
+        String[] permissions = new String[]{
+                Manifest.permission.VIBRATE,
+        };
+
+        requestPermissions(permissions);
+        Vibrator vibrator = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
+
+        if (!vibrator.hasVibrator()) {
+            toastShow("No vibrator");
+            return;
+        }
+
+        vibrator.cancel();
+        vibrator.vibrate(new long[]{100, 200, 100, 200}, 0);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == TACK_PIC_REQ_CODE) {
+            if (resultCode == RESULT_OK) {
+                Log.i("CAMERA", "OK");
+            } else {
+                Log.i("CAMERA", "Error");
             }
         }
     }
