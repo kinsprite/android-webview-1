@@ -18,7 +18,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initWebView();
-        webView.loadUrl("https://micro.qinzhiqiang.cn");
+        // webView.loadUrl("https://micro.qinzhiqiang.cn");
+        webView.loadUrl("file:///android_asset/index.html");
     }
 
     private void initWebView() {
