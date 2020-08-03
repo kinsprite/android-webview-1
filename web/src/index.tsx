@@ -1,3 +1,4 @@
+import React from 'react';
 import ReactDOM from 'react-dom';
 import RouterBase from './RouterBase';
 
@@ -8,4 +9,9 @@ Object.assign(window, {
   nativeMessageHandler,
 });
 
-ReactDOM.render(RouterBase(), document.getElementById('root'));
+ReactDOM.render(
+  <React.StrictMode>
+    <RouterBase />
+  </React.StrictMode>,
+  document.getElementById('root'),
+);

@@ -46,6 +46,14 @@
   color: white;
 }
 
+.BtnGroup > button {
+  display: block;
+  margin: 0.5em;
+  min-width: 8em;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
 .AppLink {
   color: #61dafb;
 }

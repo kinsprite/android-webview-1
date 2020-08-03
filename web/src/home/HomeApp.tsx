@@ -3,20 +3,25 @@ import {
   NavLink,
 } from 'react-router-dom';
 
-import LoginAsTester from './LoginAsTester';
-
-import logo from './logo.svg';
 import styles from './HomeApp.module.css';
+import { sendMessageToNative } from '../nativeMessage';
+
+function cameraOpen() {
+  sendMessageToNative('camera_open');
+}
+
+function vibratorNotify() {
+  sendMessageToNative('vibrator_notify');
+}
 
 function HomeApp(): JSX.Element {
   return (
     <div className={styles.App}>
       <header className={styles.AppHeader}>
-        <LoginAsTester />
-        <img src={logo} className={styles.AppLogo} alt="logo" />
-        <p>
-          <code>React Micro Frontends @ 2020</code>
-        </p>
+        <div className={styles.BtnGroup}>
+          <button type="button" onClick={cameraOpen}>Camera</button>
+          <button type="button" onClick={vibratorNotify}>Vibrator</button>
+        </div>
         <ul>
           <li>
             <NavLink to="/home" className={styles.AppLink}>Home</NavLink>
@@ -25,7 +30,6 @@ function HomeApp(): JSX.Element {
             <NavLink to="/app-example" className={styles.AppLink}>App Example</NavLink>
           </li>
         </ul>
-        <div data-spa-render="spaDynamicView2" />
       </header>
       <footer className={styles.AppFooter}>
         <a

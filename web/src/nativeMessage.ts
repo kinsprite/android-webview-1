@@ -93,7 +93,7 @@ const msgLogger = {
   sendMessage: logMessageToNative,
 };
 
-function sendMessageToNative(msgId: string, payload: string): void {
+function sendMessageToNative(msgId: string, payload?: string): void {
   const injectedNative = (window as any).injectedNative || msgLogger;
   injectedNative.sendMessage(msgId, payload || '');
 }
