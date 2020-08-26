@@ -43,8 +43,8 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
         setContentView(R.layout.activity_main);
 
         initWebView();
-        // webView.loadUrl("https://micro.qinzhiqiang.cn");
-        webView.loadUrl("file:///android_asset/index.html");
+        webView.loadUrl("https://m.qinzhiqiang.cn");
+        // webView.loadUrl("file:///android_asset/index.html");
 
         startTick();
     }
@@ -60,14 +60,19 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setRenderPriority(WebSettings.RenderPriority.HIGH);
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDefaultFontSize(16);
 
-        //设置缓存模式
-        settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
+        // 设置缓存模式
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         // 开启DOM storage API 功能
         settings.setDomStorageEnabled(true);
+        // 开启 database storage API 功能
+        settings.setDatabaseEnabled(true);
+        // 开启 Application Caches 功能
+        settings.setAppCacheEnabled(true);
 
         webView.setWebViewClient(new WebViewClient() {
             //在webview里打开新链接，否则会使用系统中浏览器打开新链接
@@ -85,8 +90,14 @@ public class MainActivity extends AppCompatActivity implements JsBridgeMsgHandle
 
 
     private void sendMessageToWeb(String msgId, String payload) {
-        String jsContent = "if (this.nativeMessageHandler) { this.nativeMessageHandler("
-                + Util.toJsString(msgId) + "," + Util.toJsString(payload) + ")}";
+        String jsContent = "(function () {"
+                + "var msgId = " + Util.toJsString(msgId) + ";"
+                + "var payload = " + Util.toJsString(payload) + ";"
+                + "if (window.nativeMessageHandler) { window.nativeMessageHandler(msgId, payload); } else { "
+                +  "if (!window.__PRELOAD_NATIVE_MESSAGES__) { window.__PRELOAD_NATIVE_MESSAGES__ = []; }"
+                +  "window.__PRELOAD_NATIVE_MESSAGES__.push({ msgId: msgId, payload: payload });"
+                + "}" // else
+                + "})()";
         Log.i("MsgToWeb", "javascript:" + jsContent);
 
         webView.post(new Runnable() {
